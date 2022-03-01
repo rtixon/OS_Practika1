@@ -1,31 +1,38 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
+using System.Xml.Linq;
+using System.Xml;
 namespace OS_Praktika1
 {
+  [Serializable]
+  class Person
+  {
+    public string Name { get; set; }
+    public int Age { get; set; }
+
+    public Person(string name, int age)
+    {
+      Name = name;
+      Age = age;
+    }
+  }
   class Program
   {
     static void Main(string[] args)
     {
       Console.ForegroundColor = ConsoleColor.Cyan;
       Console.BackgroundColor = ConsoleColor.Black;
-      string begin;
-      int filecount = 0;
-      string catalog = "";
+      int filecount;
+      string dirMovedFileToZip = "";
       string dirName = "";
-      string choice;
-      string fileName = "";
-      string fileNumber = "";
-      string TxtNumber = "";
-      Console.WriteLine("Введите *Начать*, чтобы начать работу в программе...");
-      begin = Console.ReadLine();
-      switch (begin)
-      {
-        case "Начать":
-          Start();
-          break;
-      }
+      string fileName;
+      Start();
       void Start()
       {
+        string choice;
       start:
         Console.Clear();
         choice = "";
@@ -77,7 +84,7 @@ namespace OS_Praktika1
       }
       void DirectoryStaff()
       {
-        catalog = "";
+        string catalog = "";
       NameSet:
         if (catalog == "0") goto DirectoryEnd;
         if (dirName == ".")
@@ -97,10 +104,10 @@ namespace OS_Praktika1
           Console.WriteLine("\n\n Редактировать подкаталоги:");
           Console.WriteLine("\n   3. Создать подкаталог в выбранном каталоге");
           Console.WriteLine("\n   4. Удалить подкаталог в выбранном каталоге");
-          Console.WriteLine("\n   5. Переместить подкаталог");
+          Console.WriteLine("\n   5. Переместить файлы данного каталога в другой (несуществующий) каталог");
           Console.WriteLine("\n\n Перемещение по каталогам:");
-          Console.WriteLine("\n   6. Переместиться в подкаталог данного каталога");
-          Console.WriteLine("\n   7. Переместиться в родительский каталог данного подкаталога");
+          Console.WriteLine("\n   6. Перейти в подкаталог данного каталога");
+          Console.WriteLine("\n   7. Перейти в родительский каталог данного подкаталога");
           Console.WriteLine("\n   8. Задать новый адрес каталога");
           Console.WriteLine("\n   9. Работа с файлами каталога");
           Console.WriteLine("\n\n   0. Назад в главное меню");
@@ -153,7 +160,7 @@ namespace OS_Praktika1
       void SetDirectoryName()
       {
       SetDirectoryName:
-        Console.WriteLine("Введите путь к каталогу:\n");
+        Console.WriteLine("(Начало работы) Введите путь к каталогу:\n");
         Console.WriteLine("(Введите точку, чтобы вернуться назад)\n>>");
         dirName = Console.ReadLine();
         if (dirName == ".") goto End;
@@ -220,6 +227,7 @@ namespace OS_Praktika1
         if (!System.IO.Directory.Exists(adress))
         {
           System.IO.Directory.CreateDirectory(adress);
+          Console.Clear();
           Console.WriteLine("Подкаталог " + subpath + " создан! (Нажмите клавишу Enter, чтобы продолжить)");
           Console.ReadLine();
         }
@@ -266,7 +274,8 @@ namespace OS_Praktika1
           if (answer == "1")
           {
             System.IO.Directory.Delete(adress, true);
-            Console.WriteLine("\nКаталог удален! (Нажмите клавишу Enter, чтобы продолжить)");
+            Console.Clear();
+            Console.WriteLine("\nКаталог " + adress + " удален! (Нажмите клавишу Enter, чтобы продолжить)");
             Console.ReadLine();
           }
 
@@ -327,7 +336,27 @@ namespace OS_Praktika1
       }
       void MoveDirectory()
       {
-
+      begin:
+        Console.WriteLine("В какой новый каталог (пропишите путь) переместить файлы выбранного каталога?\n");
+        Console.WriteLine("(Введите точку, чтобы вернуться назад)\n>>");
+        string newPath = Console.ReadLine();
+        if (newPath != ".")
+        {
+          DirectoryInfo dirInfo = new DirectoryInfo(dirName);
+          if (!Directory.Exists(newPath))
+          {
+            dirInfo.MoveTo(newPath);
+            Console.Clear();
+            Console.WriteLine("Файлы перемещены!");
+            Console.ReadLine();
+          }
+          else
+          {
+            Console.WriteLine("Данный каталог существует, пропишите путь к несуществующему каталогу");
+            goto begin;
+          }
+        }
+        newPath = "";
       }
       void GetFileCount()
       {
@@ -342,6 +371,7 @@ namespace OS_Praktika1
       // Работа с файлами каталога
       void FileStaff()
       {
+        string fileNumber = "";
       FileStaff:
         if ((fileNumber == "0"))
         {
@@ -357,9 +387,10 @@ namespace OS_Praktika1
         Console.WriteLine("\n 4. Переместить файл данного каталога в другой");
         Console.WriteLine("\n 5. Скопировать файл из выбранного каталога в другой");
         Console.WriteLine("\n 6. Отредактировать файл");
+        Console.WriteLine("\n 7. Создать архив");
+        Console.WriteLine("\n 8. Создать XML файл");
         Console.WriteLine("\n 0. Назад в предыдущее меню");
         Console.WriteLine("\n");
-
         Console.WriteLine("\n >>");
         fileNumber = (Console.ReadLine());
         Console.Clear();
@@ -383,6 +414,12 @@ namespace OS_Praktika1
             break;
           case "6":
             EditFileStaff();
+            break;
+          case "7":
+            CreateArchive();
+            break;
+          case "8":
+            CreateXml();
             break;
           case "0":
             break;
@@ -610,11 +647,43 @@ namespace OS_Praktika1
         }
       End:;
       }
+      void CreateArchive()
+      {
+      begin:
+        Console.WriteLine("Введите название для нового архива (без расширения):\n");
+        Console.WriteLine("(Введите точку, чтобы вернуться назад)\n>>");
+        string ArchiveName = Console.ReadLine();
+        string ArchiveDir = dirName + "/" + ArchiveName;
+        string ArchivePath = dirName + "/" + ArchiveName + ".zip";
+        FileInfo fileInf = new FileInfo(ArchivePath);
+        if (ArchiveName != ".")
+          if (!fileInf.Exists)
+          {
+            {
+              if (!System.IO.Directory.Exists(ArchiveDir))
+              {
+                System.IO.Directory.CreateDirectory(ArchiveDir);
+                ZipFile.CreateFromDirectory(ArchiveDir, ArchivePath);
+                System.IO.Directory.Delete(ArchiveDir, true);
+                Console.WriteLine("Архив *" + ArchiveName + "* создан!");
+                Console.ReadLine();
+              }
+            }
+          }
+          else
+          {
+            Console.WriteLine("Архив с таким названием существует!");
+            Console.ReadLine();
+            Console.Clear();
+            goto begin;
+          }
+      }
+
+      // Редактирование файлов
       void EditFileStaff()
       {
         GetFileCount();
         string Extension;
-        string answer;
         if (filecount == 0)
         {
           Console.WriteLine("В данном каталоге нет файлов! (Нажмите клавишу Enter для продолжения...)");
@@ -643,6 +712,7 @@ namespace OS_Praktika1
           if (Extension == ".txt") EditTxt();
           if (Extension == ".json") EditJson();
           if (Extension == ".xml") EditXml();
+          if (Extension == ".zip") EditZip();
         }
         else
         {
@@ -655,6 +725,7 @@ namespace OS_Praktika1
       }
       void EditTxt()
       {
+        string TxtNumber = "";
       begin:
         if (TxtNumber == "0") goto End;
         TxtNumber = "";
@@ -670,7 +741,6 @@ namespace OS_Praktika1
         switch (TxtNumber)
         {
           case "1":
-            Console.WriteLine("bruh");
             using (FileStream fstream = File.OpenRead(fileName))
             {
               // преобразуем строку в байты
@@ -703,25 +773,28 @@ namespace OS_Praktika1
         }
         goto begin;
       End:;
+        TxtNumber = "";
       }
       void EditJson()
       {
+        string JsonNumber = "";
       begin:
-        if (TxtNumber == "0") goto End;
-        TxtNumber = "";
+        if (JsonNumber == "0") goto End;
+        JsonNumber = "";
         Console.Clear();
         Console.WriteLine(">> Выберите действие с файлом по адресу " + fileName + ":\n");
         Console.WriteLine("\n 1. Прочитать файл");
         Console.WriteLine("\n 2. Записать в файл строку, введённую пользователем");
+        Console.WriteLine("\n 3. Выполнить сериализацию объекта в формате JSON и записать в файл.");
+        Console.WriteLine("\n 4. Выполнить десериализацию объекта.");
         Console.WriteLine("\n 0. Назад");
         Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
-        TxtNumber = Console.ReadLine();
-        if (TxtNumber == ".") goto End;
+        JsonNumber = Console.ReadLine();
+        if (JsonNumber == ".") goto End;
         Console.Clear();
-        switch (TxtNumber)
+        switch (JsonNumber)
         {
           case "1":
-            Console.WriteLine("bruh");
             using (FileStream fstream = File.OpenRead(fileName))
             {
               // преобразуем строку в байты
@@ -738,8 +811,6 @@ namespace OS_Praktika1
             Console.Clear();
             Console.WriteLine("Введите строку для записи в файл:\n>>");
             string text = Console.ReadLine();
-
-            // запись в файл
             using (FileStream fstream = new FileStream(fileName, FileMode.OpenOrCreate))
             {
               // преобразуем строку в байты
@@ -748,6 +819,65 @@ namespace OS_Praktika1
               fstream.Write(array, 0, array.Length);
               Console.WriteLine("Текст записан в файл");
             }
+            break;
+          case "3":
+            Serialization();
+            break;
+          case "4":
+            Deserialization();
+            break;
+          case "0":
+            break;
+        }
+        goto begin;
+      End:;
+      }
+      void EditZip()
+      {
+        string fileDirName = dirName + "/" + fileName;
+        string zipNumber = "";
+        string targetFolder = dirName + "/newUnexpected" + fileName;
+      begin:
+        if (zipNumber == "0") goto End;
+        Console.Clear();
+        Console.WriteLine(">> Выберите действие с файлом по адресу " + fileName + ":\n");
+        Console.WriteLine("\n 1. Показать список файлов в архиве");
+        Console.WriteLine("\n 2. Переместить файл в данный архив");
+        Console.WriteLine("\n 3. Копировать файл в данный архив");
+        Console.WriteLine("\n 4. Удалить файл из данного архива");
+        Console.WriteLine("\n 5. Разархивировать файлы");
+        Console.WriteLine("\n 6. Удалить архив со всеми файлами");
+        Console.WriteLine("\n 0. Назад");
+        Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
+        zipNumber = Console.ReadLine();
+        if (zipNumber == ".") goto End;
+        Console.Clear();
+        switch (zipNumber)
+        {
+          case "1":
+            Console.WriteLine("Список файлов в данном архиве\n");
+            using (ZipArchive zipArchive = ZipFile.OpenRead(fileName))
+            {
+              foreach (ZipArchiveEntry entry in zipArchive.Entries)
+              {
+                Console.WriteLine(entry.FullName);
+              }
+              Console.ReadLine();
+            }
+            break;
+          case "2":
+            CopyFileToZip();
+            FileInfo fileInf = new FileInfo(dirMovedFileToZip);
+            if (dirMovedFileToZip != ".") fileInf.Delete();
+            break;
+          case "3":
+            CopyFileToZip();
+            break;
+          case "4":
+            DeleteFileFromArchieve();
+            break;
+          case "5":
+            DeArchieve();
             break;
           case "0":
             break;
@@ -757,11 +887,249 @@ namespace OS_Praktika1
       }
       void EditXml()
       {
+        string XmlNumber = "";
+      begin:
+        if ((XmlNumber == "0"))
+        {
+          XmlNumber = "";
+          goto End;
+        }
+        XmlNumber = "";
+        Console.Clear();
+        Console.WriteLine(">> Выберите действие с файлами каталога *" + dirName + "*:\n");
+        Console.WriteLine("\n 1. Прочитать элемент файла");
+        Console.WriteLine("\n 2. Прочитать файл");
+        Console.WriteLine("\n 3. Записать в файл новые данные");
+        Console.WriteLine("\n 0. Назад в предыдущее меню");
+        Console.WriteLine("\n");
+        Console.WriteLine("\n >>");
+        XmlNumber = (Console.ReadLine());
+        Console.Clear();
+        switch (XmlNumber)
+        {
+          case "1":
+            ReadXml();
+            break;
+          case "2":
+            ReadXmlFile();
+            break;
+          case "3":
+            EditXmlFile();
+            break;
+          case "0":
+            break;
+        }
+        goto begin;
+      End:;
+      }
+      void Serialization()
+      {
+        // объект для сериализации
+        Person person = new Person("Tom", 29);
+        Console.WriteLine("Объект создан");
+
+        // создаем объект BinaryFormatter
+        BinaryFormatter formatter = new BinaryFormatter();
+        // получаем поток, куда будем записывать сериализованный объект
+        using (FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate))
+        {
+          formatter.Serialize(fs, person);
+          Console.WriteLine("Объект сериализован");
+        }
+        Console.ReadLine();
+      }
+      void Deserialization()
+      {
+        BinaryFormatter formatter = new BinaryFormatter();
+        // получаем поток, куда будем записывать сериализованный объект
+        // десериализация из файла people.dat
+        using (FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate))
+        {
+          Person newPerson = (Person)formatter.Deserialize(fs);
+
+          Console.WriteLine("Объект десериализован");
+          Console.WriteLine($"Имя: {newPerson.Name} --- Возраст: {newPerson.Age}");
+        }
+        Console.ReadLine();
+      }
+
+      // Работа с архивом
+      void CopyFileToZip()
+      {
+      beginAdd:
+        Console.WriteLine("Введите путь к каталогу файла, который надо добавить");
+        Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
+        string DirOfFileToAdd = Console.ReadLine();
+        if (DirOfFileToAdd != ".")
+        {
+          if (System.IO.Directory.Exists(DirOfFileToAdd))
+          {
+            Console.WriteLine("\nВведите название файла для добавления\n");
+            Console.WriteLine("Файлы:\n");
+            string[] files = System.IO.Directory.GetFiles(dirName);
+            foreach (string s in files)
+            {
+              Console.WriteLine(s);
+            }
+            Console.WriteLine("\n>>");
+            string nameFileToAdd = Console.ReadLine();
+            string FileDirToAdd = DirOfFileToAdd + "/" + nameFileToAdd;
+            FileInfo fileInf = new FileInfo(FileDirToAdd);
+            if (fileInf.Exists)
+              using (ZipArchive zipArchive = ZipFile.Open(fileName, ZipArchiveMode.Update))
+              {
+                // вызов метода для добавления файла в архив
+                zipArchive.CreateEntryFromFile(FileDirToAdd, nameFileToAdd);
+                Console.WriteLine(FileDirToAdd);
+                Console.ReadLine();
+                dirMovedFileToZip = FileDirToAdd;
+              }
+            else
+            {
+              Console.WriteLine("Данного файла не существует!");
+              Console.ReadLine();
+              Console.Clear();
+              goto beginAdd;
+            }
+          }
+          else
+          {
+            Console.WriteLine("Каталога не существует!");
+            Console.ReadLine();
+            Console.Clear();
+            goto beginAdd;
+          }
+        }
+        dirMovedFileToZip = ".";
+      }
+      void DeArchieve()
+      {
+      begin:
+        Console.WriteLine("Введите путь к каталогу, в который требуется разархивировать архив:");
+        Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
+        string directoryPath = Console.ReadLine();
+        if (directoryPath != ".")
+        {
+          if (System.IO.Directory.Exists(dirName))
+          {
+            ZipFile.ExtractToDirectory(fileName, directoryPath);
+            Console.Clear();
+            Console.WriteLine("Архив разархивирован.");
+            Console.ReadLine();
+          }
+          else
+          {
+            Console.WriteLine("Каталога не существует");
+            Console.ReadLine();
+            goto begin;
+          }
+        }
+      }
+      void DeleteFileFromArchieve()
+      {
+        string answer;
+        using (ZipArchive zipArchive = ZipFile.Open(fileName, ZipArchiveMode.Update))
+        {
+          Console.WriteLine("Введите название выбранного файла из архива для удаления:\n");
+          Console.WriteLine("Файлы из архива:");
+          foreach (ZipArchiveEntry entry in zipArchive.Entries)
+          {
+            Console.WriteLine(entry.FullName);
+          }
+          Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
+          string nameDeleteFile = Console.ReadLine();
+          Console.WriteLine("\nВы действительно хотите удалить файл " + nameDeleteFile + " из архива?");
+          Console.WriteLine("Выберите 1 для ДА или 0 для НЕТ\n");
+          answer = Console.ReadLine();
+          if (answer == "1")
+            if (nameDeleteFile != ".") zipArchive.Entries.FirstOrDefault(x => x.Name == nameDeleteFile)?.Delete();
+        }
+      }
+      void CreateXml()
+      {
+        string XmlName;
+        Console.WriteLine("Введите имя для нового Xml файла");
+        XmlName = Console.ReadLine();
+        XDocument xdoc = new XDocument();
+        // создаем корневой элемент
+        XElement MainElement = new XElement("phones");
+        // создаем первый элемент
+        XElement Element = new XElement("phone");
+        // создаем атрибут
+        XAttribute NameAttr = new XAttribute("name", "iPhone 6");
+        XElement CompanyElem = new XElement("company", "Apple");
+        XElement PriceElem = new XElement("price", "40000");
+        // добавляем атрибут и элементы в первый элемент
+        Element.Add(NameAttr);
+        Element.Add(CompanyElem);
+        Element.Add(PriceElem);
+
+        // добавляем в корневой элемент
+        MainElement.Add(Element);
+        // добавляем корневой элемент в документ
+        xdoc.Add(MainElement);
+        //сохраняем документ
+        string XmlDirName = dirName + "/" + XmlName + ".xml";
+        xdoc.Save(XmlDirName);
+        Console.Clear();
+        Console.WriteLine("Файл " + XmlDirName + " создан!");
+        Console.ReadLine();
+      }
+      void ReadXml()
+      {
+        XDocument xdoc = XDocument.Load(fileName);
+        foreach (XElement phoneElement in xdoc.Element("phones").Elements("phone"))
+        {
+          XAttribute nameAttribute = phoneElement.Attribute("name");
+          XElement companyElement = phoneElement.Element("company");
+          XElement priceElement = phoneElement.Element("price");
+
+          if (nameAttribute != null && companyElement != null && priceElement != null)
+          {
+            Console.WriteLine($"Смартфон: {nameAttribute.Value}");
+            Console.WriteLine($"Компания: {companyElement.Value}");
+            Console.WriteLine($"Цена: {priceElement.Value}");
+          }
+          Console.WriteLine();
+        }
+        Console.ReadLine();
+      }
+      void EditXmlFile()
+      {
+        XDocument xdoc = XDocument.Load(fileName);
+        XElement root = xdoc.Element("phones");
+        Console.WriteLine("Введите название элемента:\n>>");
+        string Element = Console.ReadLine();
+        Console.WriteLine("Введите название атрибута 1:\n>>");
+        string Attribute1 = Console.ReadLine();
+        Console.WriteLine("Введите значение атрибута 1:\n>>");
+        string AttributeValue1 = Console.ReadLine();
+        Console.WriteLine("Введите название атрибута 2:\n>>");
+        string Attribute2 = Console.ReadLine();
+        Console.WriteLine("Введите значение элемента:\n>>");
+        string AttributeValue2 = Console.ReadLine();
+        Console.WriteLine("Введите название атрибута 3:\n>>");
+        string Attribute3 = Console.ReadLine();
+        Console.WriteLine("Введите значение атрибута 3:\n>>");
+        string AttributeValue3 = Console.ReadLine();
+        root.Add(new XElement(Element,
+                    new XAttribute(Attribute1, AttributeValue2),
+                    new XElement(Attribute2, AttributeValue2),
+                    new XElement(Attribute3, AttributeValue2)));
+        xdoc.Save(fileName);
+        // выводим xml-документ на консоль
+        Console.Clear();
+        Console.WriteLine(xdoc);
+
+        Console.Read();
+      }
+      void ReadXmlFile()
+      {
+        XDocument xdoc = XDocument.Load(fileName);
+        Console.WriteLine(xdoc);
+        Console.ReadLine();
 
       }
-      // Редактирование файлов
-
     }
-
   }
 }
