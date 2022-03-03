@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using System.Xml.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml;
 namespace OS_Praktika1
 {
@@ -26,6 +28,7 @@ namespace OS_Praktika1
       Console.ForegroundColor = ConsoleColor.Cyan;
       Console.BackgroundColor = ConsoleColor.Black;
       int filecount;
+            string JsonString = "";
       string dirMovedFileToZip = "";
       string dirName = "";
       string fileName;
@@ -389,6 +392,7 @@ namespace OS_Praktika1
         Console.WriteLine("\n 6. Отредактировать файл");
         Console.WriteLine("\n 7. Создать архив");
         Console.WriteLine("\n 8. Создать XML файл");
+        Console.WriteLine("\n 9. Создать JSON файл");
         Console.WriteLine("\n 0. Назад в предыдущее меню");
         Console.WriteLine("\n");
         Console.WriteLine("\n >>");
@@ -421,6 +425,9 @@ namespace OS_Praktika1
           case "8":
             CreateXml();
             break;
+                    case "9":
+                        CreateJson();
+                        break;
           case "0":
             break;
         }
@@ -926,7 +933,6 @@ namespace OS_Praktika1
       {
         // объект для сериализации
         Person person = new Person("Tom", 29);
-        Console.WriteLine("Объект создан");
 
         // создаем объект BinaryFormatter
         BinaryFormatter formatter = new BinaryFormatter();
@@ -936,23 +942,17 @@ namespace OS_Praktika1
           formatter.Serialize(fs, person);
           Console.WriteLine("Объект сериализован");
         }
-        Console.ReadLine();
+                JsonString = JsonSerializer.Serialize(person);
+                File.WriteAllText(fileName, JsonString);
+                Console.ReadLine();
       }
       void Deserialization()
-      {
-        BinaryFormatter formatter = new BinaryFormatter();
-        // получаем поток, куда будем записывать сериализованный объект
-        // десериализация из файла people.dat
-        using (FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate))
-        {
-          Person newPerson = (Person)formatter.Deserialize(fs);
-
-          Console.WriteLine("Объект десериализован");
-          Console.WriteLine($"Имя: {newPerson.Name} --- Возраст: {newPerson.Age}");
-        }
-        Console.ReadLine();
-      }
-
+            {
+                Person person = new Person("Tom", 29);
+                JsonString = File.ReadAllText(fileName);
+                person = JsonSerializer.Deserialize<Person>(JsonString);
+            }
+   
       // Работа с архивом
       void CopyFileToZip()
       {
@@ -1005,7 +1005,7 @@ namespace OS_Praktika1
       void DeArchieve()
       {
       begin:
-        Console.WriteLine("Введите путь к каталогу, в который требуется разархивировать архив:");
+        Console.WriteLine("Введите путь к несуществующему каталогу, в который требуется разархивировать архив:");
         Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
         string directoryPath = Console.ReadLine();
         if (directoryPath != ".")
@@ -1130,6 +1130,22 @@ namespace OS_Praktika1
         Console.ReadLine();
 
       }
+
+      //Работа с JSON
+      void CreateJson()
+      {
+                string JsonName;
+                Console.WriteLine("Введите имя для нового Json файла");
+                JsonName = Console.ReadLine();
+                Person person = new Person("Tom", 29);
+                string JsonDirName = dirName + "/" + JsonName + ".json";
+                JsonString = JsonSerializer.Serialize(person);
+                File.WriteAllText(JsonDirName, JsonString);
+                Console.Clear();
+                Console.WriteLine("Файл " + JsonDirName + " создан!");
+                Console.ReadLine();
+
+            }
     }
   }
 }
