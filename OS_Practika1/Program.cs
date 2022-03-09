@@ -4,9 +4,6 @@ using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 using System.Xml.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Xml;
 namespace OS_Praktika1
 {
   [Serializable]
@@ -28,7 +25,6 @@ namespace OS_Praktika1
       Console.ForegroundColor = ConsoleColor.Cyan;
       Console.BackgroundColor = ConsoleColor.Black;
       int filecount;
-            string JsonString = "";
       string dirMovedFileToZip = "";
       string dirName = "";
       string fileName;
@@ -392,7 +388,6 @@ namespace OS_Praktika1
         Console.WriteLine("\n 6. Отредактировать файл");
         Console.WriteLine("\n 7. Создать архив");
         Console.WriteLine("\n 8. Создать XML файл");
-        Console.WriteLine("\n 9. Создать JSON файл");
         Console.WriteLine("\n 0. Назад в предыдущее меню");
         Console.WriteLine("\n");
         Console.WriteLine("\n >>");
@@ -425,9 +420,6 @@ namespace OS_Praktika1
           case "8":
             CreateXml();
             break;
-                    case "9":
-                        CreateJson();
-                        break;
           case "0":
             break;
         }
@@ -904,9 +896,8 @@ namespace OS_Praktika1
         XmlNumber = "";
         Console.Clear();
         Console.WriteLine(">> Выберите действие с файлами каталога *" + dirName + "*:\n");
-        Console.WriteLine("\n 1. Прочитать элемент файла");
-        Console.WriteLine("\n 2. Прочитать файл");
-        Console.WriteLine("\n 3. Записать в файл новые данные");
+        Console.WriteLine("\n 1. Прочитать файл");
+        Console.WriteLine("\n 2. Записать в файл новые данные");
         Console.WriteLine("\n 0. Назад в предыдущее меню");
         Console.WriteLine("\n");
         Console.WriteLine("\n >>");
@@ -915,12 +906,9 @@ namespace OS_Praktika1
         switch (XmlNumber)
         {
           case "1":
-            ReadXml();
-            break;
-          case "2":
             ReadXmlFile();
             break;
-          case "3":
+          case "2":
             EditXmlFile();
             break;
           case "0":
@@ -933,6 +921,7 @@ namespace OS_Praktika1
       {
         // объект для сериализации
         Person person = new Person("Tom", 29);
+        Console.WriteLine("Объект создан");
 
         // создаем объект BinaryFormatter
         BinaryFormatter formatter = new BinaryFormatter();
@@ -942,17 +931,23 @@ namespace OS_Praktika1
           formatter.Serialize(fs, person);
           Console.WriteLine("Объект сериализован");
         }
-                JsonString = JsonSerializer.Serialize(person);
-                File.WriteAllText(fileName, JsonString);
-                Console.ReadLine();
+        Console.ReadLine();
       }
       void Deserialization()
-            {
-                Person person = new Person("Tom", 29);
-                JsonString = File.ReadAllText(fileName);
-                person = JsonSerializer.Deserialize<Person>(JsonString);
-            }
-   
+      {
+        BinaryFormatter formatter = new BinaryFormatter();
+        // получаем поток, куда будем записывать сериализованный объект
+        // десериализация из файла people.dat
+        using (FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate))
+        {
+          Person newPerson = (Person)formatter.Deserialize(fs);
+
+          Console.WriteLine("Объект десериализован");
+          Console.WriteLine($"Имя: {newPerson.Name} --- Возраст: {newPerson.Age}");
+        }
+        Console.ReadLine();
+      }
+
       // Работа с архивом
       void CopyFileToZip()
       {
@@ -1005,7 +1000,7 @@ namespace OS_Praktika1
       void DeArchieve()
       {
       begin:
-        Console.WriteLine("Введите путь к несуществующему каталогу, в который требуется разархивировать архив:");
+        Console.WriteLine("Введите путь к каталогу, в который требуется разархивировать архив:");
         Console.WriteLine("\n(Введите точку, чтобы вернуться назад)\n>>");
         string directoryPath = Console.ReadLine();
         if (directoryPath != ".")
@@ -1052,13 +1047,13 @@ namespace OS_Praktika1
         XmlName = Console.ReadLine();
         XDocument xdoc = new XDocument();
         // создаем корневой элемент
-        XElement MainElement = new XElement("phones");
+        XElement MainElement = new XElement("Elements");
         // создаем первый элемент
-        XElement Element = new XElement("phone");
+        XElement Element = new XElement("Example");
         // создаем атрибут
-        XAttribute NameAttr = new XAttribute("name", "iPhone 6");
-        XElement CompanyElem = new XElement("company", "Apple");
-        XElement PriceElem = new XElement("price", "40000");
+        XAttribute NameAttr = new XAttribute("Name", "ExampleName");
+        XElement CompanyElem = new XElement("Company", "ExampleCompany");
+        XElement PriceElem = new XElement("Price", "ExamplePrice");
         // добавляем атрибут и элементы в первый элемент
         Element.Add(NameAttr);
         Element.Add(CompanyElem);
@@ -1075,29 +1070,11 @@ namespace OS_Praktika1
         Console.WriteLine("Файл " + XmlDirName + " создан!");
         Console.ReadLine();
       }
-      void ReadXml()
-      {
-        XDocument xdoc = XDocument.Load(fileName);
-        foreach (XElement phoneElement in xdoc.Element("phones").Elements("phone"))
-        {
-          XAttribute nameAttribute = phoneElement.Attribute("name");
-          XElement companyElement = phoneElement.Element("company");
-          XElement priceElement = phoneElement.Element("price");
-
-          if (nameAttribute != null && companyElement != null && priceElement != null)
-          {
-            Console.WriteLine($"Смартфон: {nameAttribute.Value}");
-            Console.WriteLine($"Компания: {companyElement.Value}");
-            Console.WriteLine($"Цена: {priceElement.Value}");
-          }
-          Console.WriteLine();
-        }
-        Console.ReadLine();
-      }
+      
       void EditXmlFile()
       {
         XDocument xdoc = XDocument.Load(fileName);
-        XElement root = xdoc.Element("phones");
+        XElement root = xdoc.Element("Elements");
         Console.WriteLine("Введите название элемента:\n>>");
         string Element = Console.ReadLine();
         Console.WriteLine("Введите название атрибута 1:\n>>");
@@ -1130,22 +1107,6 @@ namespace OS_Praktika1
         Console.ReadLine();
 
       }
-
-      //Работа с JSON
-      void CreateJson()
-      {
-                string JsonName;
-                Console.WriteLine("Введите имя для нового Json файла");
-                JsonName = Console.ReadLine();
-                Person person = new Person("Tom", 29);
-                string JsonDirName = dirName + "/" + JsonName + ".json";
-                JsonString = JsonSerializer.Serialize(person);
-                File.WriteAllText(JsonDirName, JsonString);
-                Console.Clear();
-                Console.WriteLine("Файл " + JsonDirName + " создан!");
-                Console.ReadLine();
-
-            }
     }
   }
 }
