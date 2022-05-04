@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ namespace OS_Practika3
             {
                 if (tunnel.IsCancellationRequested)
                 {
-                    Console.WriteLine("Производство остановлено.");
+                    Console.WriteLine("Программа остановлена.");
                     return;
                 }
                 if (Program.tumbler && Program.count <= 100 && Program.count > -1)
@@ -34,23 +34,24 @@ namespace OS_Practika3
             }
         }
     }
-
     class Buyer
     {
+        static public int Count = 0;
         private ChannelReader<int> Reader;
 
         public Buyer(ChannelReader<int> _reader, CancellationToken tunnel)
         {
             Reader = _reader;
+
             Task.WaitAll(Run(tunnel));
         }
 
         private async Task Run(CancellationToken tunnel)
-        { 
+        {
             while (await Reader.WaitToReadAsync())
             {
 
-                if (Reader.Count >= 0)
+                if (Buyer.Count >= 0)
                 {
                     var product = await Reader.ReadAsync();
                     Program.count -= 1;
@@ -63,20 +64,20 @@ namespace OS_Practika3
 
 
                 }
-                if (Reader.Count >= 100)
+                if (Buyer.Count >= 100)
                 {
                     Program.tumbler = false;
                 }
-                else if (Reader.Count <= 80)
+                else if (Buyer.Count <= 80)
                 {
                     Program.tumbler = true;
                 }
 
                 if (tunnel.IsCancellationRequested)
                 {
-                    if (Reader.Count == 0)
+                    if (Buyer.Count == 0)
                     {
-                        Console.WriteLine("Потребление остановлено. ");
+                        Console.WriteLine("Потребление остановлено.");
                         return;
                     }
                 }
@@ -95,10 +96,11 @@ namespace OS_Practika3
             bool tumbler = true;
             while (tumbler)
             {
-                Console.WriteLine("#### МЕНЮ ПРОГРАММЫ КОНВЕЕР ####");
-                Console.WriteLine("## 1. Запустить задание.");
-                Console.WriteLine("## 0. Выйти из программы.");
-                Console.Write("## Выберите пункт меню: ");
+                Console.WriteLine("Главное меню");
+                Console.WriteLine("\n1. Запустить задание.");
+                Console.WriteLine("\n2. Очистить окно программы.");
+                Console.WriteLine("\n0. Выйти из программы.");
+                Console.Write("\nВыберите пункт меню >> ");
                 int num = int.Parse(Console.ReadLine());
                 switch (num)
                 {
@@ -122,7 +124,7 @@ namespace OS_Practika3
                         new Thread(() =>
                         {
                             bool tumbler2 = true;
-                            while(tumbler2 is true)
+                            while (tumbler2 is true)
                             {
                                 if (Console.ReadKey(true).Key == ConsoleKey.Q)
                                 {
@@ -139,7 +141,12 @@ namespace OS_Practika3
                         tumbler = false;
                         break;
 
+                    case 9:
+                        Console.Clear();
+                        break;
+
                     default:
+                        Console.Clear();
                         Console.WriteLine("Пункт меню не существует");
                         break;
                 }
