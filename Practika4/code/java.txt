@@ -1,0 +1,12 @@
+public class Main
+{
+	public static void main(String[] args) {
+        int a=0, b=3, c=3;
+        long start = System.nanoTime();
+        for (int i = 0; i < 10000; i++) a += b*2 + c - i;
+        long finish = System.nanoTime();
+        long elapsed = finish - start;
+        System.out.println("Прошло времени, мс: " + elapsed / 1000000 + "\n");
+		System.out.println("a = " + a);
+	}
+}

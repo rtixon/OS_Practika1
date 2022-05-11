@@ -1,0 +1,11 @@
+import time
+
+a = 0
+b = 3
+c = 3
+tic = time.perf_counter() * 1000
+for i in range (0, 10000):
+    a += b*2 + c - i
+toc = time.perf_counter() * 1000
+print(f"Прошло времени, мс: {toc - tic:0.2f}\n")
+print("a =", a)
