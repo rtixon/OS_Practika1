@@ -4,12 +4,15 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    int a = 0, b = 3, c = 3;
+    int a = 0, b = 2, c = 3;
     unsigned int start_time =  clock();
-    for (int i = 0; i < 10000; i ++) // начало цикла
-        a += b*2 + c - i; // тело цикла
+    for (int i = 0; i < 100000000; i ++) { // начало цикла
+        a = a + (b*2 + c);
+        a += -i;
+        }// тело цикла
     unsigned int end_time = clock(); // конечное время
-    unsigned int search_time = end_time - start_time; // искомое время
+    a = a * 2;
+    unsigned int search_time = (end_time - start_time) / 1000; // искомое время
     cout << "Прошло времени, мс: " << search_time << endl << endl;
     cout << "a = "<< a;
     return 0;

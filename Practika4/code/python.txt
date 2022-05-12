@@ -1,11 +1,13 @@
 import time
 
 a = 0
-b = 3
+b = 2
 c = 3
-tic = time.perf_counter() * 1000
-for i in range (0, 10000):
-    a += b*2 + c - i
-toc = time.perf_counter() * 1000
-print(f"Прошло времени, мс: {toc - tic:0.2f}\n")
+start_time = time.time()
+for i in range (100000000):
+    a = a + (b*2 + c)
+    a += -i
+a = a*2
+time = (time.time() - start_time) * 1000
+print(f"Прошло времени, мс: {time:0.2f}\n")
 print("a =", a)
