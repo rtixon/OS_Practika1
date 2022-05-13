@@ -7,4 +7,4 @@
   </ol>
 <p>Реализация планировщика с тремя состояниями:</p>
 <p>Готов &larr;&rarr; Выполнение &rarr; Ожидание</p>
-<img src='https://ibb.co/C1wckxP'>
+<img src="https://ibb.co/C1wckxP">
