@@ -3,4 +3,4 @@
 <h3>Задание.</h3>
 <p><i>Требования к языкам программирования: JAVA, C++, python, assembler.</i></p>
 <p>Разработать программу на нескольких языках, реализующую следующую математическую функцию в цикле.</p>
-<img style='width: 300%;'src='https://i.imgur.com/jfqXcMU.png'>
+<img style='width: 200%;'src='https://i.imgur.com/jfqXcMU.png'>
