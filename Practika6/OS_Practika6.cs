@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading;
-using System.Diagnostics;
 using System.Collections.Generic;
-// Вариант 3
+
 namespace OS_Practika6
 {
     class Program
@@ -16,10 +15,11 @@ namespace OS_Practika6
             int task_mem_max = 65535;
             bool wait_flag = false;
             Start();
-            Console.WriteLine("The program has finished execution");
+            Console.WriteLine("Программа закончила свою работу.");
             void Start()
             {
                 Console.Clear();
+                Console.WriteLine("Практическая работа №6. Вариант №3.\n\n");
                 Console.WriteLine("1. Начать выполнение.\n");
                 Console.WriteLine("2. Добавить еще задачу.\n");
                 Console.WriteLine("3. Посмотреть ресурсы памяти.\n");
@@ -73,18 +73,17 @@ namespace OS_Practika6
                 {
                     // Добавить таск в очередь
                     queue.Enqueue(task_mem_current);
-                    Console.WriteLine("It is not possible to allocate the right amount of memory. Task is placed in a queue. Task Size: {0}", task_mem_current);
+                    Console.WriteLine("Невозможно выделить нужное количество памяти. Задача ставится в очередь. Размер задачи: {0} байт.", task_mem_current);
                 }
             }
             void load_task_to_mem(int task_mem_current)
             {
-                Console.WriteLine("Task is running");
-                Console.WriteLine("The memory is filled to {0} bytes", task_mem_current);
+                Console.WriteLine("\nЗадача запущена...");
+                Console.WriteLine("Память заполнена на {0} байт.", task_mem_current);
                 mem_fullness += task_mem_current;
-                //Thread.Sleep( (int)glob_task_mem_current / 5 );
                 Thread.Sleep(5000);
                 mem_fullness -= task_mem_current;
-                Console.WriteLine("The memory has been freed up by {0} bytes", task_mem_current);
+                Console.WriteLine("Память освобождена на {0} байт.", task_mem_current);
             }
             void wait_add_key()
             {
@@ -107,13 +106,11 @@ namespace OS_Practika6
                     {
                         string q_str = "";
                         int[] arr = queue.ToArray();
-                        // Displaying the elements in array
                         foreach (int ob in arr)
                         {
                             q_str = q_str + ob.ToString() + ";  ";
                         }
-                        Console.WriteLine("STATUS: memory_fullness: {0}; tasks in queue: {1}", mem_fullness, queue.Count);
-                        Console.WriteLine("QUEUE STATUS: {0}", q_str);
+                        Console.WriteLine("Заполненность памяти - {0} байт.", mem_fullness);
                     }
                 }
             }
